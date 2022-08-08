@@ -1,7 +1,9 @@
-
+from browser import CatalogChecker
 def main():
 
-    pass
+    cc = CatalogChecker()
+
+    cc.run()
 
 
 if __name__ == '__main__':

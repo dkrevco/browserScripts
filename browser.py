@@ -31,15 +31,14 @@ class Browser:
 
 
 
-class BurgerChecker(Browser):
+class CatalogChecker(Browser):
 
     def __init__(self):
 
-        self.columns = ['href', 'HeadingCounter', 'Products on Page']
+        self.columns = ['href', 'Header', 'HeadingCounter', 'Products on Page']
         self.pages_data = []
 
-        super(BurgerChecker, self).__init__()
-
+        super(CatalogChecker, self).__init__()
 
     def run(self):
         print('Start')
@@ -49,8 +48,6 @@ class BurgerChecker(Browser):
         self._checker_pages()
         self._create_dataframe()
         self._save_to_file()
-
-        # div.SubCategoryPanelstyles__SubCategoryPanel__LinkBlock-sc-5cku7y-2.keMytB > div > div > div > div > a
 
     def _get_links(self):
 
@@ -62,7 +59,7 @@ class BurgerChecker(Browser):
 
     def _filter_for_catalog(self):
 
-        self.catalog_pages = {x for x in self.links if x.find('/catalog') >= 0}
+        self.catalog_pages = {x for x in self.links if x.find('/catalog') > -1}
 
         return self.catalog_pages
 
@@ -76,41 +73,44 @@ class BurgerChecker(Browser):
                 self.open_url(link)
                 self._find_header_counter()
                 self._count_products()
-                self.pages_data.append([link, self.counter, len(self.products)])
+                self._get_header()
+                self.pages_data.append([link, self.page_header, self.counter, len(self.products)])
             except Exception as ex:
                 print(ex)
-                self.pages_data.append([link, str(ex), '-'])
+                self.pages_data.append([link, str(ex), '-', '-'])
 
     def _find_header_counter(self):
 
         self.counter = self.driver.find_element(By.CLASS_NAME, 'indexstyles__Catalog__ProductCount-sc-l92pc1-1.bqcbnp')
         self.counter = self.counter.text.split('- ')[1]
-
         return self.counter
-
     def _count_products(self):
 
         self.products = self.driver.find_elements(By.CLASS_NAME, 'CatalogGridstyles__CatalogGrid__Item-sc-bla7rq-2.hNLNBZ')
-
         return self.products
 
+    def _get_header(self):
+
+        self.page_header = self.driver.find_element(By.TAG_NAME, 'h1').text
+        return self.page_header
     def _create_dataframe(self):
 
         self.dataframe = pd.DataFrame(self.pages_data, columns=self.columns)
-
         return self.dataframe
 
     def _save_to_file(self):
 
         self.dataframe.to_csv(f'catalog_check.csv')
+        self.dataframe.to_html(f'catalog_check.html')
+
 
 
 
 def main():
 
-    bc = BurgerChecker()
+    cc = CatalogChecker()
 
-    bc.run()
+    cc.run()
 
 
 if __name__ == '__main__':
